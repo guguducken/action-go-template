@@ -18,6 +18,11 @@ clean:
 	@rm -rf action action.yaml
 
 
+.PHONY: preconfig
+preconfig:
+	@./config.sh "$(AUTHOR)" "$(REPOSITORY)";
+
+
 ACRION_GOLDFLAGS=-ldflags="-X 'main.Name=$(REPOSITORY)' -X 'main.Author=$(AUTHOR)' -X 'main.Description=$(DESCRIPTION)' -X 'main.Icon=$(ICON)' -X 'main.Color=$(COLOR)'"
 .PHONY: action
 action:
