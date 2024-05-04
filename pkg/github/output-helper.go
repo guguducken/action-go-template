@@ -32,6 +32,6 @@ func deprecatedSetOutput(key, value string) error {
 }
 
 func deprecatedCommand(command, key, value string) error {
-	_, err := os.Stdout.WriteString(fmt.Sprintf("\n::%s name={%s}::{%s}\n", command, key, value))
+	_, err := os.Stdout.WriteString(fmt.Sprintf("\n::%s name=%s::%s\n", command, key, value))
 	return err
 }
