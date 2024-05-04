@@ -7,10 +7,11 @@ import (
 )
 
 type Input struct {
-	Name        string `yaml:"-"`
-	Description string `yaml:"description"`
-	Required    bool   `yaml:"required"`
-	Default     string `yaml:"default"`
+	Name               string `yaml:"-"`
+	Description        string `yaml:"description"`
+	DeprecationMessage string `yaml:"deprecationMessage,omitempty"`
+	Required           bool   `yaml:"required"`
+	Default            string `yaml:"default,omitempty"`
 }
 
 type Inputs map[string]Input

@@ -1,19 +1,38 @@
 package main
 
 import (
-	"fmt"
+	"errors"
 	"os"
+	"strings"
 
 	"github.com/guguducken/action-go-template/pkg/github"
 	"gopkg.in/yaml.v3"
 )
 
 var (
-	Name        = ""
-	Author      = ""
+	// Name action name, setup by makefile
+	Name = ""
+	// Author action author, setup by makefile
+	Author = ""
+	// Description action description, setup by makefile
 	Description = ""
-	Icon        = ""
-	Color       = ""
+	// Icon action icon, setup by makefile
+	Icon = ""
+	// Color action icon color, setup by makefile
+	Color = ""
+
+	// Image the docker image to use as the container to run the action, this will override default value(Dockerfile)
+	Image = ""
+	// Args an array of strings that define the inputs for a Docker container, need setup there
+	Args = []string{}
+	// Env specifies a key/value map of environment variables to set in the container environment
+	Env = map[string]string{}
+	// Entrypoint overrides the Docker ENTRYPOINT in the Dockerfile, or sets it if one wasn't already specified
+	Entrypoint = ""
+	// PreEntrypoint allows you to run a script before the entrypoint action begins
+	PreEntrypoint = ""
+	// PostEntrypoint allows you to run a cleanup script once the runs.entrypoint action has completed
+	PostEntrypoint = ""
 )
 
 type Action struct {
@@ -27,11 +46,13 @@ type Action struct {
 }
 
 type Runs struct {
-	Using string   `yaml:"using"`
-	Main  string   `yaml:"main,omitempty"`
-	Image string   `yaml:"image,omitempty"`
-	Args  []string `yaml:"args,omitempty"`
-	Post  string   `yaml:"post,omitempty"`
+	Using          string            `yaml:"using"`
+	Image          string            `yaml:"image,omitempty"`
+	Args           []string          `yaml:"args,omitempty"`
+	Env            map[string]string `yaml:"env,omitempty"`
+	Entrypoint     string            `yaml:"entrypoint,omitempty"`
+	PreEntrypoint  string            `yaml:"pre_entrypoint,omitempty"`
+	PostEntrypoint string            `yaml:"post_entrypoint,omitempty"`
 }
 
 type Branding struct {
@@ -44,11 +65,24 @@ func main() {
 	action.Inputs = github.WorkflowInputs
 	action.Outputs = github.WorkflowOutputs
 
-	action.Runs.Args = GenDockerActionArgs(github.WorkflowInputs)
+	if Image != "" {
+		action.Runs.Image = Image
+	}
+
+	// set customer settings
+	action.Runs.Args = Args
+	action.Runs.Env = Env
+	action.Runs.Entrypoint = Entrypoint
+	action.Runs.PreEntrypoint = PreEntrypoint
+	action.Runs.PostEntrypoint = PostEntrypoint
 
 	action.Branding = &Branding{
 		Icon:  Icon,
 		Color: Color,
+	}
+
+	if err := action.Validate(); err != nil {
+		panic(err)
 	}
 
 	data, err := yaml.Marshal(action)
@@ -69,15 +103,66 @@ func GenDefaultDockerAction(name, author, description string) Action {
 		Runs: Runs{
 			Using: "docker",
 			Image: "Dockerfile",
-			Args:  make([]string, 0),
 		},
 	}
 }
 
-func GenDockerActionArgs(inputs github.Inputs) []string {
-	result := make([]string, 0, len(inputs))
-	for _, input := range inputs {
-		result = append(result, fmt.Sprintf("${{ inputs.%s }}", input.Name))
+func (a Action) Validate() error {
+	if a.Name == "" {
+		return errors.New("action name is required")
 	}
-	return result
+	if a.Description == "" {
+		return errors.New("action description is required")
+	}
+
+	// check action inputs
+	if len(a.Inputs) != 0 {
+		for key, value := range a.Inputs {
+			if value.Name != key {
+				return errors.New("action input's name must equal to key")
+			}
+			if value.Description == "" {
+				return errors.New("action input's description is required")
+			}
+
+			if err := InputKeyCheck(value.Name); err != nil {
+				return err
+			}
+		}
+	}
+
+	// check action outputs
+	if len(a.Outputs) != 0 {
+		for key, value := range a.Outputs {
+			if err := InputKeyCheck(key); err != nil {
+				return err
+			}
+			if value.Description == "" {
+				return errors.New("action output's description is required")
+			}
+		}
+	}
+
+	if a.Runs.Using != "docker" {
+		return errors.New("action runs using must set value to 'docker'")
+	}
+
+	if a.Runs.Image != "Dockerfile" {
+		if !strings.HasPrefix(a.Runs.Image, "docker://") {
+			return errors.New("action runs image must start with 'docker://' or use default value(Dockerfile)")
+		}
+	}
+	return nil
+}
+
+func InputKeyCheck(key string) error {
+	if !(key[0] != '_' || 'a' <= key[0] && key[0] <= 'z' || 'A' <= key[0] && key[0] <= 'Z') {
+		return errors.New("invalid input key, which must start with a letter or _")
+	}
+	for _, char := range key {
+		if !(char == '_' || char == '-' || 'a' <= char && char <= 'z' || 'A' <= char && char <= 'Z' || '0' <= char && char <= '9') {
+			return errors.New("invalid character in key, which contain only alphanumeric characters, -, or _")
+		}
+	}
+	return nil
 }
