@@ -17,10 +17,11 @@ func SetOutput(key, value string) error {
 	if outputs == "" {
 		return deprecatedSetOutput(key, value)
 	}
-	f, err := os.OpenFile(outputs, os.O_APPEND, os.ModeAppend)
+	f, err := os.OpenFile(outputs, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
-		return errors.New("failed to open output file")
+		return errors.Join(errors.New("failed to open output file"), err)
 	}
+	defer f.Close()
 	_, err = f.WriteString(prepareKeyValueMessage(key, value))
 	return err
 }
