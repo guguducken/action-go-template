@@ -15,6 +15,5 @@ NOW="${MODULE_PREFIX}/${OWNER}/${REPOSITORY}"
 FILES=($(grep -r ${BEFORE} | grep -Ev 'idea|./.git|config.sh|Makefile' | cut -d ":" -f 1));
 
 for file in "${FILES[@]}"; do
-#  sed -i "" "s|${BEFORE_OWNER}|${OWNER}|g" "$file";
-  echo "$file";
+  sed -i "" "s|${BEFORE}|${NOW}|g" "$file";
 done
