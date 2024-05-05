@@ -9,6 +9,14 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// WorkflowInputs allow you to specify data that the action expects to use during runtime.
+// GitHub stores input parameters as environment variables.
+var WorkflowInputs = github.Inputs{}
+
+// WorkflowOutputs allow you to declare data that an action sets.
+// Actions that run later in a workflow can use the output data set in previously run actions.
+var WorkflowOutputs = github.Outputs{}
+
 var (
 	// Name action name, setup by makefile
 	Name = ""
@@ -62,8 +70,8 @@ type Branding struct {
 
 func main() {
 	action := GenDefaultDockerAction(Name, Author, Description)
-	action.Inputs = github.WorkflowInputs
-	action.Outputs = github.WorkflowOutputs
+	action.Inputs = WorkflowInputs
+	action.Outputs = WorkflowOutputs
 
 	if Image != "" {
 		action.Runs.Image = Image

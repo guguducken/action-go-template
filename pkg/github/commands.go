@@ -5,6 +5,12 @@ import (
 	"os"
 )
 
+// Info prints an info message to the log.
+func Info(message string) error {
+	_, err := os.Stdout.WriteString(message + "\n")
+	return err
+}
+
 // Debug prints a debug message to the log.
 func Debug(message string) error {
 	return Run("debug", nil, message)
