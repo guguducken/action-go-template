@@ -7,7 +7,7 @@ type noticeProperty struct {
 // Notice creates a notice message and prints the message to the log.
 // This message will create an annotation, which can associate the message with a particular file in your repository.
 // Optionally, your message can specify a position within the file by NewNoticeProperty.
-func Notice(property *noticeProperty, message string) error {
+func Notice(property Property, message string) error {
 	return Run("notice", property, message)
 }
 

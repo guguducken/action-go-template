@@ -32,7 +32,7 @@ func (e *envProperty) ToString() string {
 }
 
 // SetEnv you can make an environment variable available to any subsequent steps in a workflow job by defining or updating the environment variable
-func SetEnv(properties []envProperty) error {
+func SetEnv(properties Properties) error {
 	envFile := os.Getenv("GITHUB_ENV")
 	for i := 0; i < len(properties); i++ {
 		err := writeCommandFile(envFile, properties[i].ToString())

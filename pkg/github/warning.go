@@ -8,7 +8,7 @@ type warningProperty struct {
 // This message will create an annotation, which can associate the message with a particular file in your repository.
 // Optionally, your message can specify a position within the file by NewWarningProperty.
 // property can be nil if you don't need to specify a position.
-func Warning(property *warningProperty, message string) error {
+func Warning(property Property, message string) error {
 	return Run("warning", property, message)
 }
 
